@@ -1,0 +1,268 @@
+use inventory_management;
+
+-- # SELECT ALL DATA
+--select * from products;
+--select * from categories;
+--select * from productCategories;
+select * from orders;
+select * from orderDetails;
+select * from users;
+
+-- # SELECT DATA product & categories
+--SELECT
+--    p.product_id,
+--    p.product_name,
+--    p.description,
+--    p.price,
+--    p.stok,
+--    c.category_name
+--FROM
+--    products p
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id;
+
+
+ --# SELECT DATA product & categories
+--SELECT
+--    p.product_id,
+--    p.product_name,
+--    p.price,
+--    p.stok,
+--    c.category_name
+--FROM
+--    products p
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id;
+
+
+-- # 1. Analisis Penjualan Per Produk
+-- # Pertanyaan: Berapa total penjualan (jumlah unit dan total harga) untuk setiap produk?
+-- # orderDetails.quantity(unit_sold) * orderDetails.price_each = total_sales -> (monitor 27 * 3) *  = total_sales
+--SELECT
+--    p.product_name,
+--    SUM(od.quantity) AS total_units_sold,
+--    SUM(od.quantity * od.price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    products p ON od.product_id = p.product_id
+--GROUP BY
+--    p.product_name
+--ORDER BY
+--    total_sales DESC;
+
+-- # 2. Analisis Total Penjualan Per Kategori
+-- # Berapa total penjualan (jumlah unit dan total harga) untuk setiap kategori produk?
+-- # orderDetails.quantity(unit_sold) * orderDetails.price_each = total_sales -> (monitor 27 * 3) *  = total_sales
+--SELECT
+--    c.category_name,
+--    SUM(od.quantity) AS total_units_sold,
+--    SUM(od.quantity * od.price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    products p ON od.product_id = p.product_id
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id
+--GROUP BY
+--    c.category_name
+--ORDER BY
+--    total_sales DESC;
+
+-- # 3. Analisis Rata-Rata Harga Produk per Kategori
+--Pertanyaan: Berapa rata-rata harga produk dalam setiap kategori?
+-- # ( (unit1 * price_each) + ...etc (kategori) / total_unit ) 
+--SELECT
+--    c.category_name,
+--    AVG(p.price) AS average_price
+--FROM
+--    products p
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id
+--GROUP BY
+--    c.category_name
+--ORDER BY
+--    average_price DESC;
+
+-- # 4.Daftar Pengguna dan Total Belanja Mereka
+--Pertanyaan: Berapa total belanja yang dilakukan oleh setiap pengguna?
+-- # (quantity * price_each) + ...etc 
+--SELECT
+--    u.username,
+--    SUM(od.quantity * od.price_each) AS total_spent
+--FROM
+--    orders o
+--JOIN
+--    users u ON o.user_id = u.user_id
+--JOIN
+--    orderDetails od ON o.order_id = od.order_id
+--GROUP BY
+--    u.username
+--ORDER BY
+--    total_spent DESC;
+
+-- # 5. Produk Terbaru dan Kategori Mereka
+-- Pertanyaan: Apa saja produk terbaru yang ditambahkan beserta kategori mereka?
+--SELECT
+--    p.product_name,
+--    p.created_at,
+--    c.category_name
+--FROM
+--    products p
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id
+--ORDER BY
+--    p.created_at DESC;
+
+-- # 6. Rangkuman Penjualan per Bulan
+--Pertanyaan: Berapa total penjualan (jumlah unit dan total harga) per bulan?
+--SELECT
+--    FORMAT(o.order_date, 'yyyy-MM') AS month,
+--    SUM(od.quantity) AS total_units_sold,
+--    SUM(od.quantity * od.price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    orders o ON od.order_id = o.order_id
+--GROUP BY
+--    FORMAT(o.order_date, 'yyyy-MM')
+--ORDER BY
+--    month;
+
+-- # 7.Produk Terlaris
+-- Pertanyaan: Produk apa yang terjual paling banyak dalam hal unit?
+-- # quantity(unit_sold) + ...etc
+--SELECT
+--    p.product_name,
+--    SUM(od.quantity) AS total_units_sold,
+--	SUM(od.quantity * price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    products p ON od.product_id = p.product_id
+--GROUP BY
+--    p.product_name
+--ORDER BY
+--    total_units_sold DESC;
+
+-- # 6. Penjualan Tertinggi
+--Pertanyaan: Produk apa yang memiliki total penjualan tertinggi?
+-- # ( Quantity * price_each ) + ..etc
+--SELECT
+--    p.product_name,
+--    SUM(od.quantity * od.price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    products p ON od.product_id = p.product_id
+--GROUP BY
+--    p.product_name
+--ORDER BY
+--    total_sales DESC;
+
+-- # 7. Pengguna dengan Transaksi Terbanyak
+--Pertanyaan: Siapa pengguna yang memiliki jumlah transaksi terbanyak?
+-- # Frank Castle = ORD006 + ORD007 = 2 Transaction
+--SELECT
+--    u.username,
+--    COUNT(o.order_id) AS total_orders
+--FROM
+--    orders o
+--JOIN
+--    users u ON o.user_id = u.user_id
+--GROUP BY
+--    u.username
+--ORDER BY
+--    total_orders DESC;
+
+-- # 8. Produk dengan Stok Terendah
+--Pertanyaan: Produk mana yang memiliki stok paling sedikit?
+--SELECT TOP 5
+--    p.product_name,
+--    p.stok
+--FROM
+--    products p
+--ORDER BY
+--    p.stok ASC;
+
+
+-- # 11. Rata-Rata Jumlah Barang per Transaksi
+--Pertanyaan: Berapa rata-rata jumlah barang yang dibeli per transaksi?
+--SELECT
+--    AVG(total_items) AS average_items_per_order
+--FROM (
+--    SELECT
+--	  FORMAT(o.order_date, 'yyyy-MM') AS month,
+--        o.order_id,
+--        SUM(od.quantity) AS total_items
+--    FROM
+--        orderDetails od
+--    JOIN
+--        orders o ON od.order_id = o.order_id
+--    GROUP BY
+--        o.order_id, FORMAT(o.order_date, 'yyyy-MM')
+--) 
+--AS order_summary;
+
+-- # 12. Produk dengan Penjualan Terendah
+--Pertanyaan: Produk mana yang memiliki total penjualan terendah?
+-- ?
+--SELECT
+--    p.product_name,
+--    SUM(od.quantity * od.price_each) AS total_sales
+--FROM
+--    orderDetails od
+--JOIN
+--    products p ON od.product_id = p.product_id
+--GROUP BY
+--    p.product_name
+--ORDER BY
+--    total_sales ASC
+--LIMIT 5; -- Atau gunakan TOP 5 untuk SQL Server
+
+-- # 13. Daftar Kategori dan Jumlah Produk di Setiap Kategori
+--Pertanyaan: Berapa jumlah produk yang termasuk dalam setiap kategori?
+--SELECT
+--    c.category_name,
+--    COUNT(p.product_id) AS number_of_products
+--FROM
+--    products p
+--JOIN
+--    productCategories pc ON p.product_id = pc.product_id
+--JOIN
+--    categories c ON pc.category_id = c.category_id
+--GROUP BY
+--    c.category_name
+--ORDER BY
+--    number_of_products DESC;
+
+
+-- # 15. Perbandingan Penjualan Produk Terlaris vs Terendah
+--Pertanyaan: Apa perbandingan total penjualan antara produk terlaris dan terendah?
+--WITH SalesSummary AS (
+--    SELECT
+--        p.product_name,
+--        SUM(od.quantity * od.price_each) AS total_sales
+--    FROM
+--        orderDetails od
+--    JOIN
+--        products p ON od.product_id = p.product_id
+--    GROUP BY
+--        p.product_name
+--)
+--SELECT
+--    MAX(total_sales) AS max_sales,
+--    MIN(total_sales) AS min_sales,
+--    MAX(total_sales) - MIN(total_sales) AS difference
+--FROM
+--    SalesSummary;
